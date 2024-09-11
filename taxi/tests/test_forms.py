@@ -63,7 +63,7 @@ class FormTests(TestCase):
         )
 
     def test_license_update_form(self):
-        old_license = 'QAZ12345'
+        old_license = "QAZ12345"
         new_license = "AAA00000"
         data = {"license_number": new_license}
         self.user.license_number = old_license
