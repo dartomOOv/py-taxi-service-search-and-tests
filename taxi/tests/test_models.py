@@ -23,7 +23,8 @@ class ModelTest(TestCase):
     def test_string_representation_of_driver(self):
         self.assertEqual(
             str(self.driver),
-            f"{self.driver.username} ({self.driver.first_name} {self.driver.last_name})"
+            f"{self.driver.username} "
+            f"({self.driver.first_name} {self.driver.last_name})"
         )
 
     def test_string_representation_of_car(self):
@@ -39,4 +40,4 @@ class ModelTest(TestCase):
         )
 
     def test_get_absolute_url_of_driver(self):
-        self.assertEqual(self.driver.get_absolute_url(), '/drivers/1/')
+        self.assertEqual(self.driver.get_absolute_url(), "/drivers/1/")

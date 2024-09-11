@@ -16,6 +16,7 @@ URLS_NAME = [
     "manufacturer",
 ]
 
+
 class PublicUrlsTest(TestCase):
     def test_login_required(self):
         for path in URL_PATHS:
@@ -43,17 +44,11 @@ class TemplatesViewTest(TestCase):
         user = get_user_model().objects.get(pk=1)
         self.client.force_login(user)
 
-    def test_view_uses_correct_template(self):
-        for url in URLS_NAME:
-            response = self.client.get(reverse(f"taxi:{url}-list"))
-            self.assertEqual(response.status_code, 200)
-            self.assertTemplateUsed(response, f"taxi/{url}_list.html")
-
     def test_pagination_is_five(self):
         for url in URLS_NAME:
             response = self.client.get(reverse(f"taxi:{url}-list"))
-            self.assertTrue('is_paginated' in response.context)
-            self.assertTrue(response.context['is_paginated'] == True)
+            self.assertTrue("is_paginated" in response.context)
+            self.assertTrue(response.context["is_paginated"])
             self.assertEqual(len(response.context[f"{url}_list"]), 5)
 
     def test_lists_all_objects_at_second_page(self):

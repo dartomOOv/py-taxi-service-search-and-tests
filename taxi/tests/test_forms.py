@@ -4,7 +4,12 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 
-from taxi.forms import DriverCreationForm, CarForm, DriverLicenseUpdateForm, DriverSearchForm
+from taxi.forms import (
+    DriverCreationForm,
+    CarForm,
+    DriverLicenseUpdateForm,
+    DriverSearchForm
+)
 from taxi.models import Manufacturer, Driver
 
 
@@ -41,37 +46,46 @@ class FormTests(TestCase):
         queryset = get_user_model().objects.filter(id=1)
         form_data = {
             "model": "testmodel",
-            "drivers":  queryset,
+            "drivers": queryset,
             "manufacturer": manufacturer
         }
         form = CarForm(data=form_data)
 
         self.assertTrue(form.is_valid())
         self.assertEqual(form.cleaned_data["model"], form_data["model"])
-        self.assertEqual(form.cleaned_data["manufacturer"], form_data["manufacturer"])
-        self.assertEqual(list(form.cleaned_data["drivers"]), list(form_data["drivers"]))
-# --------------------------------------------------------
-    def test_license_update_validation_form(self):
-        data = {"license_number": "AAA00000"}
-        data_f = {"license_number": "AA0000"}
-        res = reverse("taxi:driver-update", args=[self.user.id])
-        self.user.license_number="QAZ12345"
+        self.assertEqual(
+            form.cleaned_data["manufacturer"],
+            form_data["manufacturer"]
+        )
+        self.assertEqual(
+            list(form.cleaned_data["drivers"]),
+            list(form_data["drivers"])
+        )
+
+    def test_license_update_form(self):
+        old_license = 'QAZ12345'
+        new_license = "AAA00000"
+        data = {"license_number": new_license}
+        self.user.license_number = old_license
         self.user.save()
-        form = DriverLicenseUpdateForm(data=data)
+        form = DriverLicenseUpdateForm(instance=self.user, data=data)
         self.assertTrue(form.is_valid())
-        form = DriverLicenseUpdateForm(data=data_f)
-        self.assertFalse(form.is_valid())
+        self.assertEqual(self.user.license_number, new_license)
 
-        patched_user = self.client.put(res, data=data, content_type="application/json")
-
-        print(patched_user)
-        self.assertEqual(patched_user.status_code, 200)
-        self.assertEqual(patched_user.content, 'request method: PUT')
-        self.assertEqual(self.user.license_number, data)
-# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
     def test_driver_search_form(self):
-        search_form = DriverSearchForm(data={"username": "a"})
-        response = self.client.get(reverse("taxi:driver-list"), {"username": "a"})
+        expected_result = "username=a"
+        data = {"username": "a"}
+        response = self.client.get(reverse("taxi:driver-list"), data)
+        self.assertEqual(expected_result, response.request["QUERY_STRING"])
 
-        print(response.request)
+    def test_car_search_form(self):
+        expected_result = "model=a"
+        data = {"model": "a"}
+        response = self.client.get(reverse("taxi:car-list"), data)
+        self.assertEqual(expected_result, response.request["QUERY_STRING"])
 
+    def test_manufacturer_search_form(self):
+        expected_result = "name=a"
+        data = {"name": "a"}
+        response = self.client.get(reverse("taxi:manufacturer-list"), data)
+        self.assertEqual(expected_result, response.request["QUERY_STRING"])

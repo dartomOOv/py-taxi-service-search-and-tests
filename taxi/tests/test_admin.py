@@ -18,8 +18,10 @@ class AdminSiteTest(TestCase):
             password="test driver",
             license_number="QAZ12345"
         )
-        self.manufacturer = Manufacturer.objects.create(name="test manufacturer1")
-        self.manufacturer = Manufacturer.objects.create(name="test manufacturer2")
+        for num in range(1, 3):
+            self.manufacturer = Manufacturer.objects.create(
+                name=f"test manufacturer{num}"
+            )
         self.car1 = Car.objects.create(
             model="test car1",
             manufacturer_id=1,
