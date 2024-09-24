@@ -7,11 +7,15 @@ from taxi.forms import (
     CarForm,
     DriverLicenseUpdateForm,
 )
-from taxi.models import Manufacturer, Driver
+from taxi.models import Manufacturer, Car
 
 
 class FormTests(TestCase):
     def setUp(self):
+        self.manufacturer = Manufacturer.objects.create(
+            name="testname",
+            country="testcountry"
+        )
         self.user = get_user_model().objects.create_user(
             username="test",
             password="password123"
@@ -36,15 +40,11 @@ class FormTests(TestCase):
         self.assertEqual(new_user.license_number, form_data["license_number"])
 
     def test_car_creation(self):
-        manufacturer = Manufacturer.objects.create(
-            name="testname",
-            country="testcountry"
-        )
         queryset = get_user_model().objects.filter(id=1)
         form_data = {
             "model": "testmodel",
             "drivers": queryset,
-            "manufacturer": manufacturer
+            "manufacturer": self.manufacturer
         }
         form = CarForm(data=form_data)
 
@@ -66,23 +66,47 @@ class FormTests(TestCase):
         self.user.license_number = old_license
         self.user.save()
         form = DriverLicenseUpdateForm(instance=self.user, data=data)
+
         self.assertTrue(form.is_valid())
         self.assertEqual(self.user.license_number, new_license)
 
     def test_driver_search_form(self):
-        expected_result = "username=a"
-        data = {"username": "a"}
+        expected_url_result = "username=e"
+        expected_query_result = get_user_model().objects.filter(
+            username__icontains="e"
+        )
+        data = {"username": "e"}
         response = self.client.get(reverse("taxi:driver-list"), data)
-        self.assertEqual(expected_result, response.request["QUERY_STRING"])
+        url_result = response.request["QUERY_STRING"]
+        query_result = response.context["object_list"]
+
+        self.assertEqual(expected_url_result, url_result)
+        self.assertEqual(list(expected_query_result), list(query_result))
 
     def test_car_search_form(self):
-        expected_result = "model=a"
-        data = {"model": "a"}
+        Car.objects.create(
+            model="testmodel",
+            manufacturer=self.manufacturer
+        )
+        expected_url_result = "model=o"
+        expected_query_result = Car.objects.filter(model__icontains="o")
+        data = {"model": "o"}
         response = self.client.get(reverse("taxi:car-list"), data)
-        self.assertEqual(expected_result, response.request["QUERY_STRING"])
+        url_result = response.request["QUERY_STRING"]
+        query_result = response.context["object_list"]
+
+        self.assertEqual(expected_url_result, url_result)
+        self.assertEqual(list(expected_query_result), list(query_result))
 
     def test_manufacturer_search_form(self):
-        expected_result = "name=a"
+        expected_url_result = "name=a"
+        expected_query_result = Manufacturer.objects.filter(
+            name__icontains="a"
+        )
         data = {"name": "a"}
         response = self.client.get(reverse("taxi:manufacturer-list"), data)
-        self.assertEqual(expected_result, response.request["QUERY_STRING"])
+        url_result = response.request["QUERY_STRING"]
+        query_result = response.context["object_list"]
+
+        self.assertEqual(expected_url_result, url_result)
+        self.assertEqual(list(expected_query_result), list(query_result))
