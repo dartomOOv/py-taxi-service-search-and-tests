@@ -20,7 +20,7 @@ class FormTests(TestCase):
             get_user_model().objects.create_user(
                 username=f"test{i}",
                 password=f"p@ssword123{i}",
-                license_number = f"QAZ1234{i}",
+                license_number=f"QAZ1234{i}",
             )
             Car.objects.create(
                 model=f"testmodel{i}",
