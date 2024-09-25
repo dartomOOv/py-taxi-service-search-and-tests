@@ -12,14 +12,21 @@ from taxi.models import Manufacturer, Car
 
 class FormTests(TestCase):
     def setUp(self):
-        self.manufacturer = Manufacturer.objects.create(
-            name="testname",
-            country="testcountry"
-        )
-        self.user = get_user_model().objects.create_user(
-            username="test",
-            password="password123"
-        )
+        for i in range(1, 4):
+            manufacturer = Manufacturer.objects.create(
+                name=f"test{i}name",
+                country=f"test{i}country",
+            )
+            get_user_model().objects.create_user(
+                username=f"test{i}",
+                password=f"p@ssword123{i}",
+                license_number = f"QAZ1234{i}",
+            )
+            Car.objects.create(
+                model=f"testmodel{i}",
+                manufacturer=manufacturer
+            )
+        self.user = get_user_model().objects.get(id=1)
         self.client.force_login(self.user)
 
     def test_driver_creation_with_valid_license_number_first_last_name(self):
@@ -41,10 +48,11 @@ class FormTests(TestCase):
 
     def test_car_creation(self):
         queryset = get_user_model().objects.filter(id=1)
+        manufacturer = Manufacturer.objects.get(id=1)
         form_data = {
             "model": "testmodel",
             "drivers": queryset,
-            "manufacturer": self.manufacturer
+            "manufacturer": manufacturer
         }
         form = CarForm(data=form_data)
 
@@ -71,11 +79,11 @@ class FormTests(TestCase):
         self.assertEqual(self.user.license_number, new_license)
 
     def test_driver_search_form(self):
-        expected_url_result = "username=e"
+        expected_url_result = "username=2"
         expected_query_result = get_user_model().objects.filter(
-            username__icontains="e"
+            username__icontains="2"
         )
-        data = {"username": "e"}
+        data = {"username": "2"}
         response = self.client.get(reverse("taxi:driver-list"), data)
         url_result = response.request["QUERY_STRING"]
         query_result = response.context["object_list"]
@@ -84,13 +92,9 @@ class FormTests(TestCase):
         self.assertEqual(list(expected_query_result), list(query_result))
 
     def test_car_search_form(self):
-        Car.objects.create(
-            model="testmodel",
-            manufacturer=self.manufacturer
-        )
-        expected_url_result = "model=o"
-        expected_query_result = Car.objects.filter(model__icontains="o")
-        data = {"model": "o"}
+        expected_url_result = "model=1"
+        expected_query_result = Car.objects.filter(model__icontains="1")
+        data = {"model": "1"}
         response = self.client.get(reverse("taxi:car-list"), data)
         url_result = response.request["QUERY_STRING"]
         query_result = response.context["object_list"]
@@ -99,11 +103,11 @@ class FormTests(TestCase):
         self.assertEqual(list(expected_query_result), list(query_result))
 
     def test_manufacturer_search_form(self):
-        expected_url_result = "name=a"
+        expected_url_result = "name=3"
         expected_query_result = Manufacturer.objects.filter(
-            name__icontains="a"
+            name__icontains="3"
         )
-        data = {"name": "a"}
+        data = {"name": "3"}
         response = self.client.get(reverse("taxi:manufacturer-list"), data)
         url_result = response.request["QUERY_STRING"]
         query_result = response.context["object_list"]
